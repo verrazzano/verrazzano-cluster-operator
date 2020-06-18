@@ -1,0 +1,7 @@
+build/_output
+vendor
+.idea
+**/*.iml
+coverage.cov
+coverage.html
+**/*-test-result.xml
