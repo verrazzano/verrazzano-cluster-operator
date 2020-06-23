@@ -35,12 +35,12 @@ make go-install
 
 Docker build:
 ```
-make docker-build
+make build
 ```
 
 Docker push:
 ```
-make docker-push
+make push
 ```
 
 ## Running
