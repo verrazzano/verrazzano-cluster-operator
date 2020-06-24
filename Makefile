@@ -27,7 +27,7 @@ WATCH_NAMESPACE:=
 EXTRA_PARAMS=
 INTEG_RUN_ID=
 ENV_NAME=verrazzano-cluster-operator
-GO ?= GO111MODULE=on GOPRIVATE=gitlab-odx.oracledx.com,github.com/verrazzano go
+GO ?= GO111MODULE=on GOPRIVATE=github.com/verrazzano go
 
 .PHONY: all
 all: build
