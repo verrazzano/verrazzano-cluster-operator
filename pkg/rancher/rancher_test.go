@@ -56,7 +56,7 @@ func TestGetClusters(t *testing.T) {
 			}{
 				r: TestRancher{},
 				rancherConfig: Config{
-					Url:                      "https://rancher.foo.verrazzano.oracledx.com/",
+					Url:                      "https://rancher.foo.verrazzano.example.com/",
 					Username:                 "user1",
 					Password:                 "my-password",
 					Host:                     "123.123.123.0",
