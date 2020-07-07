@@ -6,6 +6,8 @@
 package managedclusters
 
 import (
+	"context"
+
 	"github.com/golang/glog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
@@ -29,13 +31,13 @@ func CreateSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers
 		if specDiffs != "" {
 			glog.V(4).Infof("Updating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 			glog.V(6).Infof("Spec differences:\n%s", specDiffs)
-			_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Update(newSecret)
+			_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Update(context.TODO(), newSecret, metav1.UpdateOptions{})
 		} else {
 			glog.V(6).Infof("No need to update existing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 		}
 	} else {
 		glog.V(4).Infof("Creating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
-		_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Create(newSecret)
+		_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -57,7 +59,7 @@ func DeleteSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers
 		return err
 	}
 
-	err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Delete(secretName, &metav1.DeleteOptions{})
+	err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
 	if err != nil {
 		glog.Errorf("Failed to delete VerrazzanoManagedCluster Secret '%s' for cluster '%s', for the reason (%v)", secretName, cluster.Name, err)
 		return err
@@ -84,7 +86,7 @@ func newSecret(secretName string, cluster rancher.Cluster) *corev1.Secret {
 
 // get the ca.crt from secret "tls-rancher-ingress" in namespace "cattle-system"
 func GetRancherCACert(kubeClientSet kubernetes.Interface) []byte {
-	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(rancher.TlsRancherIngressSecret, metav1.GetOptions{})
+	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(context.TODO(), rancher.TlsRancherIngressSecret, metav1.GetOptions{})
 	if err != nil {
 		glog.Warningf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TlsRancherIngressSecret, err.Error())
 		return []byte{}

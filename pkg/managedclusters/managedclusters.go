@@ -6,14 +6,16 @@
 package managedclusters
 
 import (
+	"context"
+
 	"github.com/golang/glog"
-	"github.com/verrazzano/verrazzano-crd-generator/pkg/apis/verrazzano/v1beta1"
-	sdoClientSet "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned"
-	listers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/listers/verrazzano/v1beta1"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util/diff"
+	"github.com/verrazzano/verrazzano-crd-generator/pkg/apis/verrazzano/v1beta1"
+	sdoClientSet "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned"
+	listers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/listers/verrazzano/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,13 +33,13 @@ func CreateVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcList
 			glog.V(4).Infof("Updating VerrazzanoManagedCluster CR '%s'", newTmc.Name)
 			glog.V(6).Infof("Spec differences:\n%s", specDiffs)
 			newTmc.ResourceVersion = existingTmc.ResourceVersion
-			_, err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Update(newTmc)
+			_, err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Update(context.TODO(), newTmc, metav1.UpdateOptions{})
 		} else {
 			glog.V(6).Infof("No need to update existing VerrazzanoManagedCluster CR '%s'", newTmc.Name)
 		}
 	} else {
 		glog.V(4).Infof("Creating VerrazzanoManagedCluster CR '%s'", newTmc.Name)
-		_, err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Create(newTmc)
+		_, err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Create(context.TODO(), newTmc, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
@@ -58,7 +60,7 @@ func DeleteVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcList
 		return err
 	}
 
-	err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Delete(cluster.Id, &metav1.DeleteOptions{})
+	err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Delete(context.TODO(), cluster.Id, metav1.DeleteOptions{})
 	if err != nil {
 		glog.Errorf("Failed to delete VerrazzanoManagedCluster CR '%s' for cluster '%s', for the reason (%v)", cluster.Id, cluster.Name, err)
 		return err
@@ -78,8 +80,8 @@ func newVerrazzanoManagedCluster(cluster rancher.Cluster) *v1beta1.VerrazzanoMan
 		},
 		Spec: v1beta1.VerrazzanoManagedClusterSpec{
 			KubeconfigSecret: util.GetManagedClusterKubeconfigSecretName(cluster.Name),
-			ServerAddress: cluster.ServerAddress,
-			Type: cluster.Type,
+			ServerAddress:    cluster.ServerAddress,
+			Type:             cluster.Type,
 		},
 	}
 }
