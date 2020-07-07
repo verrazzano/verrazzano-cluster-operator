@@ -4,6 +4,7 @@
 package util
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	gabs "github.com/Jeffail/gabs/v2"
+	"github.com/Jeffail/gabs/v2"
 	"github.com/golang/glog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -180,7 +181,7 @@ func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[s
 
 // Retrieves the current resource from k8s as a JSON entity
 func GetJson(restClient rest.RESTClient, resource string, namespace string, name string) (*gabs.Container, error) {
-	result, err := restClient.Get().Resource(resource).Namespace(namespace).Name(name).Do().Raw()
+	result, err := restClient.Get().Resource(resource).Namespace(namespace).Name(name).Do(context.TODO()).Raw()
 	if err != nil {
 		return nil, err
 	}
