@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -155,7 +155,7 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 // WaitForSendRequest waits for the given request to return results
 func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[string]string, payload, reqUserName, reqPassword string, caData []byte, backoff wait.Backoff) (latestResponse *http.Response, latestResponseBody string, err error) {
 	expectedStatusCode := http.StatusOK
-	glog.V(7).Infof("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
+	zap.S().Debugf("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
 	startTime := time.Now()
 
 	err = Retry(backoff, func() (bool, error) {
@@ -170,6 +170,6 @@ func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[s
 		}
 		return false, nil
 	})
-	glog.V(7).Infof("Wait time: %s \n", time.Since(startTime))
+	zap.S().Debugf("Wait time: %s \n", time.Since(startTime))
 	return latestResponse, latestResponseBody, err
 }
