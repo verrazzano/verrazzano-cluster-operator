@@ -8,7 +8,7 @@ package managedclusters
 import (
 	"context"
 
-	"github.com/golang/glog"
+	"github.com/rs/zerolog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util"
@@ -18,54 +18,62 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	"os"
 )
 
 func CreateSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers.SecretLister, cluster rancher.Cluster) error {
+	// create logger for secret creation
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Cluster").Str("name", cluster.Name).Logger()
+
 	secretName := util.GetManagedClusterKubeconfigSecretName(cluster.Name)
-	glog.V(6).Infof("Processing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+	logger.Debug().Msgf("Processing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 	newSecret := newSecret(secretName, cluster)
 
 	existingSecret, err := secretLister.Secrets(constants.DefaultNamespace).Get(secretName)
 	if existingSecret != nil {
 		specDiffs := diff.CompareIgnoreTargetEmpties(existingSecret, newSecret)
 		if specDiffs != "" {
-			glog.V(4).Infof("Updating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
-			glog.V(6).Infof("Spec differences:\n%s", specDiffs)
+			logger.Info().Msgf("Updating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+			logger.Debug().Msgf("Spec differences:\n%s", specDiffs)
 			_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Update(context.TODO(), newSecret, metav1.UpdateOptions{})
 		} else {
-			glog.V(6).Infof("No need to update existing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+			logger.Debug().Msgf("No need to update existing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 		}
 	} else {
-		glog.V(4).Infof("Creating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+		logger.Info().Msgf("Creating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 		_, err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Create(context.TODO(), newSecret, metav1.CreateOptions{})
 	}
 	if err != nil {
 		return err
 	}
 
-	glog.V(6).Infof("Successfully processed VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+	logger.Debug().Msgf("Successfully processed VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 	return nil
 }
 
 func DeleteSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers.SecretLister, cluster rancher.Cluster) error {
 	secretName := util.GetManagedClusterKubeconfigSecretName(cluster.Id)
-	glog.V(6).Infof("Deleting VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+
+	// create logger for secret deletion
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Cluster").Str("name", cluster.Name).Logger()
+
+	logger.Debug().Msgf("Deleting VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 
 	_, err := secretLister.Secrets(constants.DefaultNamespace).Get(secretName)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			glog.Errorf("VerrazzanoManagedCluster Secret `%s` no longer exists for cluster '%s', for the reason (%v)", secretName, cluster.Name, err)
+			logger.Error().Msgf("VerrazzanoManagedCluster Secret `%s` no longer exists for cluster '%s', for the reason (%v)", secretName, cluster.Name, err)
 		}
 		return err
 	}
 
 	err = kubeClientSet.CoreV1().Secrets(constants.DefaultNamespace).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
 	if err != nil {
-		glog.Errorf("Failed to delete VerrazzanoManagedCluster Secret '%s' for cluster '%s', for the reason (%v)", secretName, cluster.Name, err)
+		logger.Error().Msgf("Failed to delete VerrazzanoManagedCluster Secret '%s' for cluster '%s', for the reason (%v)", secretName, cluster.Name, err)
 		return err
 	}
 
-	glog.V(6).Infof("Successfully deleted VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
+	logger.Debug().Msgf("Successfully deleted VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 	return nil
 }
 
@@ -86,13 +94,16 @@ func newSecret(secretName string, cluster rancher.Cluster) *corev1.Secret {
 
 // get the ca.crt from secret "tls-rancher-ingress" in namespace "cattle-system"
 func GetRancherCACert(kubeClientSet kubernetes.Interface) []byte {
+	// create logger for secret deletion
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", "clientSet").Logger()
+
 	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(context.TODO(), rancher.TlsRancherIngressSecret, metav1.GetOptions{})
 	if err != nil {
-		glog.Warningf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TlsRancherIngressSecret, err.Error())
+		logger.Warn().Msgf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TlsRancherIngressSecret, err.Error())
 		return []byte{}
 	}
 	if certSecret == nil {
-		glog.Warningf("Secret %s/%s not found in management cluster", rancher.RancherNamespace, rancher.TlsRancherIngressSecret)
+		logger.Warn().Msgf("Secret %s/%s not found in management cluster", rancher.RancherNamespace, rancher.TlsRancherIngressSecret)
 		return []byte{}
 	}
 	return certSecret.Data["ca.crt"]

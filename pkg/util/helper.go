@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jeffail/gabs/v2"
-	"github.com/golang/glog"
+	gabs "github.com/Jeffail/gabs/v2"
+	"github.com/rs/zerolog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
@@ -155,8 +155,11 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 
 // WaitForSendRequest:  Waits for the given request to return results
 func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[string]string, payload, reqUserName, reqPassword string, caData []byte, backoff wait.Backoff) (latestResponse *http.Response, latestResponseBody string, err error) {
+	// create logger for request results
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Request").Str("name", host).Logger()
+
 	expectedStatusCode := http.StatusOK
-	glog.V(7).Infof("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
+	logger.Debug().Msgf("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
 	startTime := time.Now()
 
 	err = Retry(backoff, func() (bool, error) {
@@ -171,7 +174,7 @@ func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[s
 		}
 		return false, nil
 	})
-	glog.V(7).Infof("Wait time: %s \n", time.Since(startTime))
+	logger.Debug().Msgf("Wait time: %s \n", time.Since(startTime))
 	return latestResponse, latestResponseBody, err
 }
 
@@ -194,15 +197,21 @@ func GetJson(restClient rest.RESTClient, resource string, namespace string, name
 
 // Sets the given attribute from the given resource JSON entity
 func SetJsonAttr(json *gabs.Container, path string, value interface{}) {
+	// create logger for Json attribute setting
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "JsonAttr").Str("name", path).Logger()
+
 	if _, err := json.SetP(value, path); err != nil {
-		glog.Errorf("Error setting '%s=%s' on %v: %v", path, value, json, err)
+		logger.Error().Msgf("Error setting '%s=%s' on %v: %v", path, value, json, err)
 	}
 }
 
 // Deletes the given attribute from the given resource JSON entity
 func DeleteJsonAttr(json *gabs.Container, path string) {
+	// create logger for Json attribute setting
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "JsonAttr").Str("name", path).Logger()
+
 	if err := json.DeleteP(path); err != nil {
-		glog.Errorf("Error deleteing '%s' from %v: %v", path, json, err)
+		logger.Error().Msgf("Error deleteing '%s' from %v: %v", path, json, err)
 	}
 }
 

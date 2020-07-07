@@ -7,9 +7,10 @@ import (
 	"bytes"
 	"errors"
 	"net/url"
+	"os"
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/rs/zerolog"
 	clientset "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned"
 	clientsetscheme "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned/scheme"
 	informers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/informers/externalversions"
@@ -62,28 +63,32 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 	//
 	// Instantiate connection and clients to local k8s cluster
 	//
-	glog.V(6).Info("Building config")
+
+	// create logger for new controller
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", rancherHost).Logger()
+
+	logger.Debug().Msg("Building config")
 	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
 	if err != nil {
-		glog.Fatalf("Error building kubeconfig: %v", err)
+		logger.Fatal().Msgf("Error building kubeconfig: %v", err)
 	}
 
-	glog.V(6).Info("Building kubernetes clientset")
+	logger.Debug().Msg("Building kubernetes clientset")
 	kubeClientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building kubernetes clientset: %v", err)
+		logger.Fatal().Msgf("Error building kubernetes clientset: %v", err)
 	}
 
-	glog.V(6).Info("Building kubernetes apiextensions apiserver clientset")
+	logger.Debug().Msg("Building kubernetes apiextensions apiserver clientset")
 	kubeExtClientSet, err := extclientset.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building kubernetes apiextensions apiserverclientset: %v", err)
+		logger.Fatal().Msgf("Error building kubernetes apiextensions apiserverclientset: %v", err)
 	}
 
-	glog.V(6).Info("Building superdomain clientset")
+	logger.Debug().Msg("Building superdomain clientset")
 	superDomainClientSet, err := clientset.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building superdomain clientset: %v", err)
+		logger.Fatal().Msgf("Error building superdomain clientset: %v", err)
 	}
 
 	//
@@ -106,7 +111,7 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 
 	clientsetscheme.AddToScheme(scheme.Scheme)
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartLogging(logger.Info().Msgf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientSet.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
@@ -115,7 +120,7 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 	if rancherHost == "" {
 		rancherUrlObj, err := url.Parse(rancherURL)
 		if err != nil {
-			glog.Fatalf("Invalid Rancher URL '%s': %v", rancherURL, err)
+			logger.Fatal().Msgf("Invalid Rancher URL '%s': %v", rancherURL, err)
 		}
 		rancherHost = rancherUrlObj.Host
 	}
@@ -139,7 +144,7 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 	}
 
 	// Set up signals so we handle the first shutdown signal gracefully
-	glog.V(6).Info("Setting up signals")
+	logger.Debug().Msg("Setting up signals")
 	stopCh := make(chan struct{})
 
 	go kubeInformerFactory.Start(stopCh)
@@ -156,16 +161,19 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 func (c *Controller) Run(threadiness int) error {
 	defer runtime.HandleCrash()
 
+	// create logger for running
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", "handler").Logger()
+
 	// Start the informer factories to begin populating the informer caches
-	glog.Info("Starting Verrazzano Rancher controller")
+	logger.Info().Msg("Starting Verrazzano Rancher controller")
 
 	// Wait for the caches to be synced before starting watchers
-	glog.Info("Waiting for informer caches to sync")
+	logger.Info().Msg("Waiting for informer caches to sync")
 	if ok := cache.WaitForCacheSync(c.stopCh, c.secretInformer.HasSynced, c.verrazzanoManagedClusterInformer.HasSynced); !ok {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	glog.Info("Starting watchers")
+	logger.Info().Msg("Starting watchers")
 
 	c.secretInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(new interface{}) { c.processRancherSecret(new.(*corev1.Secret)) },
@@ -180,30 +188,36 @@ func (c *Controller) Run(threadiness int) error {
 
 // if the secret cattle-system/tls-rancher-ingressis updated, update CertificateAuthorityData in rancherConfig
 func (c *Controller) processRancherSecret(newSecret *corev1.Secret) {
+	// create logger for secret processor
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", "secretProcessor").Logger()
+
 	if newSecret.Name == rancher.TlsRancherIngressSecret &&
 		newSecret.Namespace == rancher.RancherNamespace &&
 		bytes.Compare(newSecret.Data["ca.crt"], c.rancherConfig.CertificateAuthorityData) != 0 {
-		glog.V(4).Infof("Reloading secret %s/%s...", newSecret.Namespace, newSecret.Name)
+		logger.Info().Msgf("Reloading secret %s/%s...", newSecret.Namespace, newSecret.Name)
 		c.rancherConfig.CertificateAuthorityData = newSecret.Data["ca.crt"]
 	}
 }
 
 // Start polling the Rancher Server for updates
 func (c *Controller) startRancherWatcher(<-chan struct{}) {
+	// create logger for rancher watcher
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", "watcher").Logger()
+
 	for {
 		clusters, err := rancher.GetClusters(rancher.Rancher{}, c.rancherConfig)
 		if err != nil {
-			glog.Errorf("Failed to get Rancher managed clusters: %v", err)
+			logger.Error().Msgf("Failed to get Rancher managed clusters: %v", err)
 		} else {
 			for _, cluster := range clusters {
-				glog.V(4).Infof("Syncing Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
+				logger.Info().Msgf("Syncing Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
 
 				// Generate the resources to inform the Super Domain Operator about this cluster
 				c.generateSuperDomainOperatorResources(cluster)
 
-				glog.V(4).Infof("Successfully synced Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
+				logger.Info().Msgf("Successfully synced Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
 			}
-			glog.V(4).Infof("Successfully synced Rancher.")
+			logger.Info().Msgf("Successfully synced Rancher.")
 		}
 
 		// Check available clusters every perdefined interval in seconds
@@ -216,9 +230,13 @@ func (c *Controller) generateSuperDomainOperatorResources(cluster rancher.Cluste
 	/*********************
 	 * Create or Update VerrazzanoManagedClusters Secret if needed
 	 **********************/
+
+	// create logger for rancher watcher
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Cluster").Str("name", cluster.Name).Logger()
+
 	err := managedclusters.CreateSecret(c.kubeClientSet, c.secretLister, cluster)
 	if err != nil {
-		glog.Errorf("Failed to create/update VerrazzanoManagedCluster Secret for cluster %s, for the reason (%v)", cluster.Name, err)
+		logger.Error().Msgf("Failed to create/update VerrazzanoManagedCluster Secret for cluster %s, for the reason (%v)", cluster.Name, err)
 	}
 
 	/*********************
@@ -226,7 +244,7 @@ func (c *Controller) generateSuperDomainOperatorResources(cluster rancher.Cluste
 	 **********************/
 	err = managedclusters.CreateVerrazzanoManagedCluster(c.superDomainClientSet, c.verrazzanoManagedClusterLister, cluster)
 	if err != nil {
-		glog.Errorf("Failed to create/update VerrazzanoManagedCluster CR for cluster %s, for the reason (%v)", cluster.Name, err)
+		logger.Error().Msgf("Failed to create/update VerrazzanoManagedCluster CR for cluster %s, for the reason (%v)", cluster.Name, err)
 	}
 }
 
