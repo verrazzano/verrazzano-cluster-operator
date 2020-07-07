@@ -5,8 +5,9 @@ package main
 
 import (
 	"flag"
+	"os"
 
-	"github.com/golang/glog"
+	"github.com/rs/zerolog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/controller"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util/logs"
 )
@@ -24,20 +25,25 @@ var (
 func main() {
 	flag.Parse()
 
-	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
-		glog.Fatalf("Rancher URL and/or credentials not specified!")
-	}
-
+	// initialize logs with level and configurations
 	logs.InitLogs()
 
-	glog.V(6).Infof("Creating new controller watching namespace %s.", watchNamespace)
+	//create log for main function
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "ClusterOperator").Str("name", "ClusterInit").Logger()
+
+	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
+		logger.Fatal().Msgf("Rancher URL and/or credentials not specified!")
+	}
+
+
+	logger.Debug().Msgf("Creating new controller watching namespace %s.", watchNamespace)
 	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherUserName, rancherPassword)
 	if err != nil {
-		glog.Fatalf("Error creating the controller: %s", err.Error())
+		logger.Fatal().Msgf("Error creating the controller: %s", err.Error())
 	}
 
 	if err = newController.Run(2); err != nil {
-		glog.Fatalf("Error running controller: %s", err.Error())
+		logger.Fatal().Msgf("Error running controller: %s", err.Error())
 	}
 }
 
