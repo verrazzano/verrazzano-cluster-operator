@@ -7,3 +7,7 @@ vendor
 coverage.cov
 coverage.html
 **/*-test-result.xml
+known_licenses.txt
+no_licenses.txt
+thirdparty_licenses/known_licenses.txt
+thirdparty_licenses/no_licenses.txt
