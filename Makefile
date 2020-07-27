@@ -91,11 +91,6 @@ push-tag:
 unit-test: go-install
 	$(GO) test -v ./pkg/... ./cmd/...
 
-
-PHONY: thirdparty-check
-thirdparty-check:
-	./build/scripts/thirdparty_check.sh
-
 .PHONY: coverage
 coverage:
 	./build/scripts/coverage.sh html

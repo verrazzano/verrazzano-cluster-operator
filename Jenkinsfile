@@ -64,10 +64,7 @@ pipeline {
         stage('Third Party License Check') {
             when { not { buildingTag() } }
             steps {
-                sh """
-                    cd ${GO_REPO_PATH}/verrazzano-cluster-operator
-                    make thirdparty-check
-                """
+                thirdpartyCheck()
             }
         }
 
