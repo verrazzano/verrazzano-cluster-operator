@@ -4,6 +4,8 @@
 package rancher
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"github.com/Jeffail/gabs/v2"
 	"net/http"
@@ -37,6 +39,7 @@ func (c TestRancher) APICall(rancherConfig Config, apiPath string, httpMethod st
 }
 
 func TestGetClusters(t *testing.T) {
+	password := generateRandomString()
 	type args struct {
 		r             rancher
 		rancherConfig Config
@@ -58,7 +61,7 @@ func TestGetClusters(t *testing.T) {
 				rancherConfig: Config{
 					Url:                      "https://rancher.foo.verrazzano.example.com/",
 					Username:                 "user1",
-					Password:                 "my-password",
+					Password:                 password,
 					Host:                     "123.123.123.0",
 					CertificateAuthorityData: []byte{},
 				},
@@ -100,7 +103,7 @@ func TestGetClusters(t *testing.T) {
 				rancherConfig: Config{
 					Url:                      "bad-url",
 					Username:                 "user1",
-					Password:                 "my-password",
+					Password:                 password,
 					Host:                     "123.123.123.0",
 					CertificateAuthorityData: []byte{},
 				},
@@ -121,4 +124,11 @@ func TestGetClusters(t *testing.T) {
 			}
 		})
 	}
+}
+
+// generateRandomString returns a base64 encoded generated random string.
+func generateRandomString() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
 }
