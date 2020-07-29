@@ -23,9 +23,4 @@ spec:
         imagePullPolicy: Never
         args:
           - --v=4
-          # These are dummy values as Rancher is currently not installed
-          - --rancherURL=https://my-rancher.com:443
-          - --rancherUserName=test
-          - --rancherPassword=test
-          - --rancherHost=test
       serviceAccount: verrazzano-cluster-operator
