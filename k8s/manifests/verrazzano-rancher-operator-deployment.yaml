@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: verrazzano-cluster-operator
-        image: phx.ocir.io/stevengreenberginc/verrazzano/verrazzano-cluster-operator:latest
+        image: <DOCKER-REPO-TAG>/<DOCKER-NAMESPACE-TAG>/verrazzano/verrazzano-cluster-operator:<IMAGE-TAG>
         imagePullPolicy: Always
         args:
           - --v=4
