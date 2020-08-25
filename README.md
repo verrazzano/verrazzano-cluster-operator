@@ -1,5 +1,4 @@
-[![pipeline status](https://github.com/verrazzano/verrazzano-cluster-operator/badges/master/pipeline.svg)](https://github.com/verrazzano/verrazzano-cluster-operator/commits/master)
-[![coverage report](https://github.com/verrazzano/verrazzano-cluster-operator/badges/master/coverage.svg)](https://github.com/verrazzano/verrazzano-cluster-operator/commits/master)
+
 # Verrazzano Rancher Operator
 
 The Verrazzano Rancher Operator is an operator that interacts with Rancher Server on behalf of the Verrazzano System.
