@@ -22,7 +22,7 @@ This repo is currently a skeleton, with details and tests stubbed out.  What it 
 
 ## Artifacts
 
-On a successful release (which occurs on a Git tag), this repo publises a Docker image:
+On a successful release (which occurs on a Git tag), this repo publishes a Docker image:
 - phx.ocir.io/stevengreenberginc/verrazzano/verrazzano-cluster-operator:tag
 
 ## Building
@@ -63,10 +63,6 @@ kubectl apply -f ./k8s/manifests/verrazzano-cluster-operator-deployment.yaml
 
 **Note:** - if you don't intend to use the latest official Docker image, fill in your own Docker image in
 `verrazzano-cluster-operator-deployment.yaml` above.
-
-## Demo
-
-TBD
 
 ## Development
 
