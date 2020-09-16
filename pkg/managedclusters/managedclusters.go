@@ -20,8 +20,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CreateVerrazzanoManagedCluster creates/updates a VerrazzanoManagedCluster resource
 func CreateVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcLister listers.VerrazzanoManagedClusterLister, cluster rancher.Cluster) error {
-	glog.V(6).Infof("Processing VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.Id, cluster.Name)
+	glog.V(6).Infof("Processing VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.ID, cluster.Name)
 
 	// Construct the expected VerrazzanoManagedCluster
 	newTmc := newVerrazzanoManagedCluster(cluster)
@@ -45,28 +46,29 @@ func CreateVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcList
 		return err
 	}
 
-	glog.V(6).Infof("Successfully processed VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.Id, cluster.Name)
+	glog.V(6).Infof("Successfully processed VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.ID, cluster.Name)
 	return nil
 }
 
+// DeleteVerrazzanoManagedCluster deletes a VerrazzanoManagedCluster resource
 func DeleteVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcLister listers.VerrazzanoManagedClusterLister, cluster rancher.Cluster) error {
-	glog.V(6).Infof("Deleting VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.Id, cluster.Name)
+	glog.V(6).Infof("Deleting VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.ID, cluster.Name)
 
-	_, err := tmcLister.VerrazzanoManagedClusters(constants.DefaultNamespace).Get(cluster.Id)
+	_, err := tmcLister.VerrazzanoManagedClusters(constants.DefaultNamespace).Get(cluster.ID)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			glog.Errorf("VerrazzanoManagedCluster CR `%s` no longer exists for cluster '%s', for the reason (%v)", cluster.Id, cluster.Name, err)
+			glog.Errorf("VerrazzanoManagedCluster CR `%s` no longer exists for cluster '%s', for the reason (%v)", cluster.ID, cluster.Name, err)
 		}
 		return err
 	}
 
-	err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Delete(context.TODO(), cluster.Id, metav1.DeleteOptions{})
+	err = sdoClientSet.VerrazzanoV1beta1().VerrazzanoManagedClusters(constants.DefaultNamespace).Delete(context.TODO(), cluster.ID, metav1.DeleteOptions{})
 	if err != nil {
-		glog.Errorf("Failed to delete VerrazzanoManagedCluster CR '%s' for cluster '%s', for the reason (%v)", cluster.Id, cluster.Name, err)
+		glog.Errorf("Failed to delete VerrazzanoManagedCluster CR '%s' for cluster '%s', for the reason (%v)", cluster.ID, cluster.Name, err)
 		return err
 	}
 
-	glog.V(6).Infof("Successfully deleted VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.Id, cluster.Name)
+	glog.V(6).Infof("Successfully deleted VerrazzanoManagedCluster CR '%s' for cluster '%s'", cluster.ID, cluster.Name)
 	return nil
 }
 

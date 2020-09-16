@@ -20,6 +20,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 )
 
+// CreateSecret creates/updates a VerrazzanoManagedCluster secret
 func CreateSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers.SecretLister, cluster rancher.Cluster) error {
 	secretName := util.GetManagedClusterKubeconfigSecretName(cluster.Name)
 	glog.V(6).Infof("Processing VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
@@ -47,8 +48,9 @@ func CreateSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers
 	return nil
 }
 
+// DeleteSecret deletes a VerrazzanoManagedCluster secret
 func DeleteSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers.SecretLister, cluster rancher.Cluster) error {
-	secretName := util.GetManagedClusterKubeconfigSecretName(cluster.Id)
+	secretName := util.GetManagedClusterKubeconfigSecretName(cluster.ID)
 	glog.V(6).Infof("Deleting VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 
 	_, err := secretLister.Secrets(constants.DefaultNamespace).Get(secretName)
@@ -84,15 +86,15 @@ func newSecret(secretName string, cluster rancher.Cluster) *corev1.Secret {
 	}
 }
 
-// get the ca.crt from secret "tls-rancher-ingress" in namespace "cattle-system"
+// GetRancherCACert gets the ca.crt from secret "tls-rancher-ingress" in namespace "cattle-system"
 func GetRancherCACert(kubeClientSet kubernetes.Interface) []byte {
-	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(context.TODO(), rancher.TlsRancherIngressSecret, metav1.GetOptions{})
+	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(context.TODO(), rancher.TLSRancherIngressSecret, metav1.GetOptions{})
 	if err != nil {
-		glog.Warningf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TlsRancherIngressSecret, err.Error())
+		glog.Warningf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TLSRancherIngressSecret, err.Error())
 		return []byte{}
 	}
 	if certSecret == nil {
-		glog.Warningf("Secret %s/%s not found in management cluster", rancher.RancherNamespace, rancher.TlsRancherIngressSecret)
+		glog.Warningf("Secret %s/%s not found in management cluster", rancher.RancherNamespace, rancher.TLSRancherIngressSecret)
 		return []byte{}
 	}
 	return certSecret.Data["ca.crt"]

@@ -4,7 +4,6 @@
 package util
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -15,19 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Jeffail/gabs/v2"
 	"github.com/golang/glog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
 )
 
-func GetManagedClusterKubeconfigSecretName(clusterId string) string {
-	return fmt.Sprintf("%s-%s", constants.ManagedClusterPrefix, clusterId)
+// GetManagedClusterKubeconfigSecretName returns the secret for a managed cluster
+func GetManagedClusterKubeconfigSecretName(clusterID string) string {
+	return fmt.Sprintf("%s-%s", constants.ManagedClusterPrefix, clusterID)
 }
 
-func GetManagedClusterLabels(managedClusterId string) map[string]string {
-	return map[string]string{constants.K8SAppLabel: constants.VerrazzanoGroup, constants.VerrazzanoClusterLabel: managedClusterId}
+// GetManagedClusterLabels return labels for a managed cluster
+func GetManagedClusterLabels(managedClusterID string) map[string]string {
+	return map[string]string{constants.K8SAppLabel: constants.VerrazzanoGroup, constants.VerrazzanoClusterLabel: managedClusterID}
 }
 
 // DefaultRetry is the default backoff for e2e tests.
@@ -59,17 +58,17 @@ func Retry(backoff wait.Backoff, fn wait.ConditionFunc) error {
 
 // Retrieve poxy url from environment
 func getProxyURL() string {
-	if proxyUrl := os.Getenv("https_proxy"); proxyUrl != "" {
-		return proxyUrl
+	if proxyURL := os.Getenv("https_proxy"); proxyURL != "" {
+		return proxyURL
 	}
-	if proxyUrl := os.Getenv("HTTPS_PROXY"); proxyUrl != "" {
-		return proxyUrl
+	if proxyURL := os.Getenv("HTTPS_PROXY"); proxyURL != "" {
+		return proxyURL
 	}
-	if proxyUrl := os.Getenv("http_proxy"); proxyUrl != "" {
-		return proxyUrl
+	if proxyURL := os.Getenv("http_proxy"); proxyURL != "" {
+		return proxyURL
 	}
-	if proxyUrl := os.Getenv("HTTP_PROXY"); proxyUrl != "" {
-		return proxyUrl
+	if proxyURL := os.Getenv("HTTP_PROXY"); proxyURL != "" {
+		return proxyURL
 	}
 	return ""
 }
@@ -85,7 +84,7 @@ func rootCertPool(caData []byte) *x509.CertPool {
 	return certPool
 }
 
-// Send http request
+// SendRequest sends http request
 func SendRequest(action, reqURL, host string, headers map[string]string, parameterMap map[string]string, payload string, reqUserName string, reqPassword string, caData []byte) (*http.Response, string, error) {
 	proxyURL := getProxyURL()
 
@@ -153,7 +152,7 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 	return resp, string(body), err
 }
 
-// WaitForSendRequest:  Waits for the given request to return results
+// WaitForSendRequest waits for the given request to return results
 func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[string]string, payload, reqUserName, reqPassword string, caData []byte, backoff wait.Backoff) (latestResponse *http.Response, latestResponseBody string, err error) {
 	expectedStatusCode := http.StatusOK
 	glog.V(7).Infof("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
@@ -173,40 +172,4 @@ func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[s
 	})
 	glog.V(7).Infof("Wait time: %s \n", time.Since(startTime))
 	return latestResponse, latestResponseBody, err
-}
-
-//
-// JSon helper
-//
-
-// Retrieves the current resource from k8s as a JSON entity
-func GetJson(restClient rest.RESTClient, resource string, namespace string, name string) (*gabs.Container, error) {
-	result, err := restClient.Get().Resource(resource).Namespace(namespace).Name(name).Do(context.TODO()).Raw()
-	if err != nil {
-		return nil, err
-	}
-	json, err := gabs.ParseJSON(result)
-	if err != nil {
-		return nil, err
-	}
-	return json, nil
-}
-
-// Sets the given attribute from the given resource JSON entity
-func SetJsonAttr(json *gabs.Container, path string, value interface{}) {
-	if _, err := json.SetP(value, path); err != nil {
-		glog.Errorf("Error setting '%s=%s' on %v: %v", path, value, json, err)
-	}
-}
-
-// Deletes the given attribute from the given resource JSON entity
-func DeleteJsonAttr(json *gabs.Container, path string) {
-	if err := json.DeleteP(path); err != nil {
-		glog.Errorf("Error deleteing '%s' from %v: %v", path, json, err)
-	}
-}
-
-// Converts contained object back to a pretty JSON formatted string
-func GetPrettyJson(json *gabs.Container) string {
-	return string(json.EncodeJSON(gabs.EncodeOptIndent("", "\t")))
 }

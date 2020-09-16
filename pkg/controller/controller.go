@@ -33,7 +33,7 @@ import (
 
 const controllerAgentName = "verrazzano-rancher-controller"
 
-// Primary controller structure
+// Controller is the primary controller structure
 type Controller struct {
 	kubeClientSet        kubernetes.Interface
 	kubeExtClientSet     apiextensionsclient.Interface
@@ -113,14 +113,14 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 	// If the Rancher host name is explicitly passed in, we'll use that, otherwise we'll just use the host name from the
 	// URL.  Having the rancherHost parameter allows rancher-operator to work in a Verrazzano environment without external DNS.
 	if rancherHost == "" {
-		rancherUrlObj, err := url.Parse(rancherURL)
+		rancherURLObj, err := url.Parse(rancherURL)
 		if err != nil {
 			glog.Fatalf("Invalid Rancher URL '%s': %v", rancherURL, err)
 		}
-		rancherHost = rancherUrlObj.Host
+		rancherHost = rancherURLObj.Host
 	}
 	rancherConfig := rancher.Config{
-		Url:                      rancherURL,
+		URL:                      rancherURL,
 		Username:                 rancherUsername,
 		Password:                 rancherPassword,
 		Host:                     rancherHost,
@@ -182,7 +182,7 @@ func (c *Controller) Run(threadiness int) error {
 
 // if the secret cattle-system/tls-rancher-ingressis updated, update CertificateAuthorityData in rancherConfig
 func (c *Controller) processRancherSecret(newSecret *corev1.Secret) {
-	if newSecret.Name == rancher.TlsRancherIngressSecret &&
+	if newSecret.Name == rancher.TLSRancherIngressSecret &&
 		newSecret.Namespace == rancher.RancherNamespace &&
 		bytes.Compare(newSecret.Data["ca.crt"], c.rancherConfig.CertificateAuthorityData) != 0 {
 		glog.V(4).Infof("Reloading secret %s/%s...", newSecret.Namespace, newSecret.Name)
@@ -198,12 +198,12 @@ func (c *Controller) startRancherWatcher(<-chan struct{}) {
 			glog.Errorf("Failed to get Rancher managed clusters: %v", err)
 		} else {
 			for _, cluster := range clusters {
-				glog.V(4).Infof("Syncing Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
+				glog.V(4).Infof("Syncing Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.ID, cluster.Name)
 
 				// Generate the resources to inform the Super Domain Operator about this cluster
 				c.generateSuperDomainOperatorResources(cluster)
 
-				glog.V(4).Infof("Successfully synced Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.Id, cluster.Name)
+				glog.V(4).Infof("Successfully synced Verrazzano Managed Cluster: Id='%s', Name='%s'", cluster.ID, cluster.Name)
 			}
 			glog.V(4).Infof("Successfully synced Rancher.")
 		}

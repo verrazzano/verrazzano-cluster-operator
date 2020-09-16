@@ -19,16 +19,16 @@ import (
 type TestRancher struct{}
 
 func (c TestRancher) APICall(rancherConfig Config, apiPath string, httpMethod string, parameterMap map[string]string, payload string) (*gabs.Container, error) {
-	if rancherConfig.Url == "bad-url" {
-		return nil, fmt.Errorf("got %s", rancherConfig.Url)
+	if rancherConfig.URL == "bad-url" {
+		return nil, fmt.Errorf("got %s", rancherConfig.URL)
 	}
 	var responseBody string
 	if apiPath == "/v3/clusters" {
 		responseBody = "{ \"data\": [{\"id\": \"c-ndvgb\", \"name\": \"foo-managed-1\", \"labels\": {\"type\": \"oke\", \"k8sApiHost\": \"130.35.130.66\", \"k8sApiPort\": \"6443\"}},{\"id\": \"c-r998z\", \"name\": \"foo-managed-2\", \"labels\": {\"type\": \"oke\", \"k8sApiHost\": \"147.154.97.197\", \"k8sApiPort\": \"6443\"}},{\"id\": \"local\", \"name\": \"local\", \"labels\": {\"type\": \"oke\", \"k8sApiHost\": \"147.154.96.26\", \"k8sApiPort\": \"6443\"}}]}"
 	} else if httpMethod == http.MethodPost && parameterMap["action"] == "generateKubeconfig" {
 		ss := strings.Split(apiPath, "/")
-		clusterId := ss[len(ss)-1]
-		responseBody = fmt.Sprintf("{\"config\": \"generatedKubeConfigOutput:%s\"}", clusterId)
+		clusterID := ss[len(ss)-1]
+		responseBody = fmt.Sprintf("{\"config\": \"generatedKubeConfigOutput:%s\"}", clusterID)
 	} else {
 		return nil, fmt.Errorf("unrecognized request: %s", apiPath)
 	}
@@ -60,7 +60,7 @@ func TestGetClusters(t *testing.T) {
 			}{
 				r: TestRancher{},
 				rancherConfig: Config{
-					Url:                      "https://rancher.foo.verrazzano.example.com/",
+					URL:                      "https://rancher.foo.verrazzano.example.com/",
 					Username:                 "user1",
 					Password:                 password,
 					Host:                     "123.123.123.0",
@@ -69,21 +69,21 @@ func TestGetClusters(t *testing.T) {
 			},
 			want: []Cluster{
 				{
-					Id:                 "c-ndvgb",
+					ID:                 "c-ndvgb",
 					Name:               "foo-managed-1",
 					KubeConfigContents: "generatedKubeConfigOutput:c-ndvgb",
 					PrometheusURL:      "",
 					ServerAddress:      "130.35.130.66:6443",
 					Type:               "oke",
 				}, {
-					Id:                 "c-r998z",
+					ID:                 "c-r998z",
 					Name:               "foo-managed-2",
 					KubeConfigContents: "generatedKubeConfigOutput:c-r998z",
 					PrometheusURL:      "",
 					ServerAddress:      "147.154.97.197:6443",
 					Type:               "oke",
 				}, {
-					Id:                 "local",
+					ID:                 "local",
 					Name:               "local",
 					KubeConfigContents: "generatedKubeConfigOutput:local",
 					PrometheusURL:      "",
@@ -102,7 +102,7 @@ func TestGetClusters(t *testing.T) {
 			}{
 				r: TestRancher{},
 				rancherConfig: Config{
-					Url:                      "bad-url",
+					URL:                      "bad-url",
 					Username:                 "user1",
 					Password:                 password,
 					Host:                     "123.123.123.0",

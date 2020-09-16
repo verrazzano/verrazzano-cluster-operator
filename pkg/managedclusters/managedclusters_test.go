@@ -12,7 +12,7 @@ import (
 
 func TestNewVerrazzanoManagedCluster(t *testing.T) {
 	cluster := rancher.Cluster{
-		Id:                 "id",
+		ID:                 "id",
 		Name:               "name",
 		KubeConfigContents: "some stuff",
 		ServerAddress:      "123.123.123.0:1234",
