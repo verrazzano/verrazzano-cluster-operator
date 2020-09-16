@@ -7,11 +7,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/Jeffail/gabs/v2"
 	"net/http"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Jeffail/gabs/v2"
 )
 
 // mock rancher implementation
@@ -108,7 +109,7 @@ func TestGetClusters(t *testing.T) {
 					CertificateAuthorityData: []byte{},
 				},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}

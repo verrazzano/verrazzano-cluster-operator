@@ -15,7 +15,7 @@ import (
 
 // interface to expose Rancher APIs
 type rancher interface {
-    APICall(rancherConfig Config, apiPath string, httpMethod string, parameterMap map[string]string, payload string) (*gabs.Container, error)
+	APICall(rancherConfig Config, apiPath string, httpMethod string, parameterMap map[string]string, payload string) (*gabs.Container, error)
 }
 
 // default rancher implementation

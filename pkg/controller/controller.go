@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
+	"github.com/verrazzano/verrazzano-cluster-operator/pkg/managedclusters"
+	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	clientset "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned"
 	clientsetscheme "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned/scheme"
 	informers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/informers/externalversions"
 	listers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/listers/verrazzano/v1beta1"
-	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
-	"github.com/verrazzano/verrazzano-cluster-operator/pkg/managedclusters"
-	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -135,7 +135,7 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 		secretInformer:                   secretsInformer.Informer(),
 		verrazzanoManagedClusterLister:   verrazzanoManagedClusterInformer.Lister(),
 		verrazzanoManagedClusterInformer: verrazzanoManagedClusterInformer.Informer(),
-		recorder: recorder,
+		recorder:                         recorder,
 	}
 
 	// Set up signals so we handle the first shutdown signal gracefully

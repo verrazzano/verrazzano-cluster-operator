@@ -4,9 +4,10 @@ package integ_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/reporters"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,4 +18,3 @@ func TestInteg(t *testing.T) {
 	junitReporter := reporters.NewJUnitReporter(fmt.Sprintf("integ-%d-test-result.xml", config.GinkgoConfig.ParallelNode))
 	RunSpecsWithDefaultAndCustomReporters(t, "Integration Test Suite", []Reporter{junitReporter})
 }
-

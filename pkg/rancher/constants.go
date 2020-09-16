@@ -21,7 +21,7 @@ type Cluster struct {
 	KubeConfigContents string
 	PrometheusURL      string
 	ServerAddress      string
-	Type			   string
+	Type               string
 }
 
 // Rancher API URLs
@@ -40,13 +40,13 @@ var (
 
 // Rancher Response json paths
 const (
-	JSON_DATA_PATH = "data"
-	JSON_ID_PATH   = "id"
-	JSON_NAME_PATH = "name"
+	JSON_DATA_PATH         = "data"
+	JSON_ID_PATH           = "id"
+	JSON_NAME_PATH         = "name"
 	JSON_K8S_API_HOST_PATH = "labels.k8sApiHost"
 	JSON_K8S_API_PORT_PATH = "labels.k8sApiPort"
-	JSON_TYPE_PATH = "labels.type"
-	CONFIG         = "config"
+	JSON_TYPE_PATH         = "labels.type"
+	CONFIG                 = "config"
 )
 
 // Rancher
