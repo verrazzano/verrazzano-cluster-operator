@@ -119,11 +119,13 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 		}
 		rancherHost = rancherUrlObj.Host
 	}
-	rancherConfig := rancher.Config{rancherURL,
-		rancherUsername,
-		rancherPassword,
-		rancherHost,
-		managedclusters.GetRancherCACert(kubeClientSet)}
+	rancherConfig := rancher.Config{
+		Url:                      rancherURL,
+		Username:                 rancherUsername,
+		Password:                 rancherPassword,
+		Host:                     rancherHost,
+		CertificateAuthorityData: managedclusters.GetRancherCACert(kubeClientSet),
+	}
 
 	controller := &Controller{
 		rancherConfig:                    rancherConfig,

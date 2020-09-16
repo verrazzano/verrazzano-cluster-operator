@@ -65,7 +65,7 @@ pipeline {
             when { not { buildingTag() } }
             steps {
                 sh """
-                    cd ${GO_REPO_PATH}/verrazzano-admission-controllers
+                    cd ${GO_REPO_PATH}/verrazzano-cluster-operator
                     make go-fmt
                 """
             }
@@ -75,7 +75,7 @@ pipeline {
             when { not { buildingTag() } }
             steps {
                 sh """
-                    cd ${GO_REPO_PATH}/verrazzano-admission-controllers
+                    cd ${GO_REPO_PATH}/verrazzano-cluster-operator
                     make go-vet
                 """
             }
@@ -85,7 +85,7 @@ pipeline {
             when { not { buildingTag() } }
             steps {
                 sh """
-                    cd ${GO_REPO_PATH}/verrazzano-admission-controllers
+                    cd ${GO_REPO_PATH}/verrazzano-cluster-operator
                     make go-lint
                 """
             }
@@ -95,7 +95,7 @@ pipeline {
             when { not { buildingTag() } }
             steps {
                 sh """
-                    cd ${GO_REPO_PATH}/verrazzano-admission-controllers
+                    cd ${GO_REPO_PATH}/verrazzano-cluster-operator
                     make go-ineffassign
                 """
             }
