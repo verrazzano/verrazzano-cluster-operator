@@ -144,7 +144,7 @@ endif
 	kubectl apply -f deploy/role_binding.yaml
 
 	echo 'Deploy operator...'
-	cat deploy/operator.yaml | sed -e 's|REPLACE_IMAGE|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' | kubectl apply -f -
+	cat deploy/operator.yaml | sed -e 's|REPLACE_IMAGE|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g;s|REPLACE_PWD|$(shell openssl rand -base64 16)|g' | kubectl apply -f -
 	echo 'Run tests...'
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/onsi/gomega/...
