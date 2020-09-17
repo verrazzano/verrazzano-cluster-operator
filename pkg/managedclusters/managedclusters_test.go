@@ -4,18 +4,19 @@
 package managedclusters
 
 import (
+	"testing"
+
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
-	"testing"
 )
 
 func TestNewVerrazzanoManagedCluster(t *testing.T) {
 	cluster := rancher.Cluster{
-		Id: "id",
-		Name: "name",
+		ID:                 "id",
+		Name:               "name",
 		KubeConfigContents: "some stuff",
-		ServerAddress: "123.123.123.0:1234",
-		Type: "oke",
+		ServerAddress:      "123.123.123.0:1234",
+		Type:               "oke",
 	}
 	c := newVerrazzanoManagedCluster(cluster)
 

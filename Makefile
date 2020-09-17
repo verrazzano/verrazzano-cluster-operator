@@ -46,11 +46,27 @@ go-run: go-install
 
 .PHONY: go-fmt
 go-fmt:
-	gofmt -s -e -d $(shell find . -name "*.go" | grep -v /vendor/)
+	gofmt -s -e -d $(shell find . -name "*.go" | grep -v /vendor/) > error.txt
+	if [ -s error.txt ]; then\
+		cat error.txt;\
+		rm error.txt;\
+		exit 1;\
+	fi
+	rm error.txt
 
 .PHONY: go-vet
 go-vet:
-	echo go vet $(shell go list ./... | grep -v /vendor/)
+	$(GO) vet $(shell go list ./... | grep -v /vendor/)
+
+.PHONY: go-lint
+go-lint:
+	$(GO) get -u golang.org/x/lint/golint
+	golint -set_exit_status $(shell go list ./... | grep -v /vendor/)
+
+.PHONY: go-ineffassign
+go-ineffassign:
+	$(GO) get -u github.com/gordonklaus/ineffassign
+	ineffassign $(shell find . -name "*.go" | grep -v /vendor/)
 
 .PHONY: go-mod
 go-mod:
@@ -128,7 +144,7 @@ endif
 	kubectl apply -f deploy/role_binding.yaml
 
 	echo 'Deploy operator...'
-	cat deploy/operator.yaml | sed -e 's|REPLACE_IMAGE|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' | kubectl apply -f -
+	cat deploy/operator.yaml | sed -e 's|REPLACE_IMAGE|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g;s|REPLACE_PWD|$(shell openssl rand -base64 16)|g' | kubectl apply -f -
 	echo 'Run tests...'
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/onsi/gomega/...

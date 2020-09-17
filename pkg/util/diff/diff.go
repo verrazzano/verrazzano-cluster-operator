@@ -11,13 +11,13 @@ import (
 )
 
 //
-// Diffs two Golang objects recursively, but treats any elements whose values are empty in the 'desiredObject' as
-// "no diff".  This is useful in a particular situation of comparing Kubernetes objects:
+// CompareIgnoreTargetEmpties diffs two Golang objects recursively, but treats any elements whose values are empty in
+// the 'desiredObject' as "no diff".  This is useful in a particular situation of comparing Kubernetes objects:
 // 1) The 'desiredObject' is constructed via code.  It will almost certainly have many, many (nested) empty values.
 // 2) It is compared against a 'liveObject', which has been retrieved live from the Kubernetes API, and has many of
 //    these empty values populated with (k8s-generated) default values.
-// In this situation, to determine whether our desiredObject is truly different than the liveObject, we ignore processing
-// of elements whose values are empty in the desiredObject.
+// In this situation, to determine whether our desiredObject is truly different than the liveObject, we ignore
+// processing of elements whose values are empty in the desiredObject.
 //
 func CompareIgnoreTargetEmpties(liveObject interface{}, desiredObject interface{}) string {
 	return filterDiffsIgnoreEmpties(pretty.Compare(liveObject, desiredObject))

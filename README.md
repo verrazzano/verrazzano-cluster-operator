@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/verrazzano/verrazzano-cluster-operator)](https://goreportcard.com/report/github.com/verrazzano/verrazzano-cluster-operator)
 
 # Verrazzano Cluster Operator
 
