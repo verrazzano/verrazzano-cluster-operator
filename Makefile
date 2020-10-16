@@ -5,8 +5,7 @@ NAME:=verrazzano-cluster-operator
 CLUSTER_NAME = v8o-cluster-operator
 
 DOCKER_IMAGE_NAME ?= ${NAME}-dev
-TAG=$(shell git rev-parse HEAD)
-DOCKER_IMAGE_TAG = ${TAG}
+DOCKER_IMAGE_TAG ?= local-$(shell git rev-parse --short HEAD)
 
 CREATE_LATEST_TAG=0
 
