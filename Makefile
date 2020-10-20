@@ -118,7 +118,7 @@ ifdef JENKINS_URL
 	./build/scripts/cleanup.sh ${CLUSTER_NAME}
 endif
 	echo 'Create cluster...'
-	time kind create cluster \
+	HTTP_PROXY="" HTTPS_PROXY="" http_proxy="" https_proxy="" time kind create cluster \
 	    --name ${CLUSTER_NAME} \
 	    --wait 5m \
 		--config=test/kind-config.yaml
@@ -132,8 +132,6 @@ ifdef JENKINS_URL
 	cat ${HOME}/.kube/config | grep server
 endif
 	kubectl cluster-info
-
-	kubectl wait --for=condition=ready nodes --all
 	kubectl get nodes
 	echo 'Copy operator Docker image into KinD...'
 	kind load --name ${CLUSTER_NAME} docker-image ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
