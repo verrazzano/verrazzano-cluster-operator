@@ -6,10 +6,11 @@ package rancher
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/golang/glog"
+	"github.com/rs/zerolog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util"
 )
 
@@ -80,8 +81,9 @@ func getGenerateKubeconfig(r rancher, rancherConfig Config, clusterID string) (s
 // APICall for Generic Rancher API call returning a json object.
 func (c Rancher) APICall(rancherConfig Config, apiPath string, httpMethod string, parameterMap map[string]string, payload string) (*gabs.Container, error) {
 	defaultHeaders := map[string]string{"Content-Type": "application/json"}
-
-	glog.V(7).Infof("[APICall] [%s] url:'%s'", httpMethod, rancherConfig.URL+apiPath)
+	// create logger for API call
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Rancher").Str("name", rancherConfig.Host).Logger()
+	logger.Debug().Msgf("[APICall] [%s] url:'%s'", httpMethod, rancherConfig.URL+apiPath)
 
 	response, responseBody, err := util.WaitForSendRequest(httpMethod, rancherConfig.URL+apiPath, rancherConfig.Host,
 		defaultHeaders, parameterMap, payload, rancherConfig.Username, rancherConfig.Password, rancherConfig.CertificateAuthorityData, util.DefaultRetry)

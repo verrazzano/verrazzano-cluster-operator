@@ -13,8 +13,8 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/golang/glog"
+	
+	"github.com/rs/zerolog"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -154,8 +154,11 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 
 // WaitForSendRequest waits for the given request to return results
 func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[string]string, payload, reqUserName, reqPassword string, caData []byte, backoff wait.Backoff) (latestResponse *http.Response, latestResponseBody string, err error) {
+	// create logger for request results
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("kind", "Request").Str("name", host).Logger()
+
 	expectedStatusCode := http.StatusOK
-	glog.V(7).Infof("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
+	logger.Debug().Msgf("Waiting for %s to reach status code %d...\n", reqURL, expectedStatusCode)
 	startTime := time.Now()
 
 	err = Retry(backoff, func() (bool, error) {
@@ -170,6 +173,7 @@ func WaitForSendRequest(action, reqURL, host string, headers, parameterMap map[s
 		}
 		return false, nil
 	})
-	glog.V(7).Infof("Wait time: %s \n", time.Since(startTime))
+	logger.Debug().Msgf("Wait time: %s \n", time.Since(startTime))
 	return latestResponse, latestResponseBody, err
 }
+
