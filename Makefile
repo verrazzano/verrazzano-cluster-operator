@@ -132,8 +132,6 @@ ifdef JENKINS_URL
 	cat ${HOME}/.kube/config | grep server
 endif
 	kubectl cluster-info
-
-	kubectl wait --for=condition=ready nodes --all
 	kubectl get nodes
 	echo 'Copy operator Docker image into KinD...'
 	kind load --name ${CLUSTER_NAME} docker-image ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
