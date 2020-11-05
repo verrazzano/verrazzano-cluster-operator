@@ -22,7 +22,6 @@ spec:
         image: REPLACE_IMAGE
         imagePullPolicy: Never
         args:
-          - --v=4
           # These are dummy values as Rancher is currently not installed
           - --rancherURL=https://my-rancher.com:443
           - --rancherUserName=test

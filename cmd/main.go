@@ -6,9 +6,11 @@ package main
 import (
 	"flag"
 
-	"github.com/golang/glog"
+	kzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
+
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/controller"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util/logs"
+	"go.uber.org/zap"
 )
 
 var (
@@ -19,25 +21,23 @@ var (
 	rancherHost     string
 	rancherUserName string
 	rancherPassword string
+	options         = kzap.Options{}
 )
 
 func main() {
 	flag.Parse()
-
+	// initialize logs with verbosity-level and configurations
+	logs.InitLogs(options)
 	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
-		glog.Fatalf("Rancher URL and/or credentials not specified!")
+		zap.S().Fatalf("Rancher URL and/or credentials not specified!")
 	}
-
-	logs.InitLogs()
-
-	glog.V(6).Infof("Creating new controller watching namespace %s.", watchNamespace)
+	zap.S().Debugf("Creating new controller watching namespace %s.", watchNamespace)
 	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherUserName, rancherPassword)
 	if err != nil {
-		glog.Fatalf("Error creating the controller: %s", err.Error())
+		zap.S().Fatalf("Error creating the controller: %s", err.Error())
 	}
-
 	if err = newController.Run(2); err != nil {
-		glog.Fatalf("Error running controller: %s", err.Error())
+		zap.S().Fatalf("Error running controller: %s", err.Error())
 	}
 }
 
@@ -49,4 +49,5 @@ func init() {
 	flag.StringVar(&rancherHost, "rancherHost", "", "Optional host name to use in host headers when accessing Rancher.")
 	flag.StringVar(&rancherUserName, "rancherUserName", "", "Rancher username.")
 	flag.StringVar(&rancherPassword, "rancherPassword", "", "Rancher password.")
+	options.BindFlags(flag.CommandLine)
 }
