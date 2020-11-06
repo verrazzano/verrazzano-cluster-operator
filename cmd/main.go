@@ -40,6 +40,8 @@ func main() {
 		zap.String("rancherURL", rancherURL),
 		zap.String("rancherHost", rancherHost))
 
+	zap.S().Debugf("Hello Debug verrazzano-cluster-operator rancherURL=%s", rancherURL)
+
 	zap.S().Debugf("Creating new controller watching namespace %s.", watchNamespace)
 	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherUserName, rancherPassword)
 	if err != nil {
