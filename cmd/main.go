@@ -31,6 +31,12 @@ func main() {
 	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
 		zap.S().Fatalf("Rancher URL and/or credentials not specified!")
 	}
+	zap.L().Info("Hello verrazzano-cluster-operator",
+		zap.String("masterURL", masterURL),
+		zap.String("watchNamespace", watchNamespace),
+		zap.String("rancherURL", rancherURL),
+		zap.String("rancherHost", rancherHost))
+
 	zap.S().Debugf("Creating new controller watching namespace %s.", watchNamespace)
 	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherUserName, rancherPassword)
 	if err != nil {
