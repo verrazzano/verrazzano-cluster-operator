@@ -31,6 +31,9 @@ func main() {
 	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
 		zap.S().Fatalf("Rancher URL and/or credentials not specified!")
 	}
+
+	zap.S().Infof("Hello verrazzano-cluster-operator rancherURL=$s", rancherURL)
+
 	zap.L().Info("Hello verrazzano-cluster-operator",
 		zap.String("masterURL", masterURL),
 		zap.String("watchNamespace", watchNamespace),
