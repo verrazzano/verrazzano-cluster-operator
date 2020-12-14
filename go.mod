@@ -8,7 +8,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/stretchr/testify v1.5.1
-	github.com/verrazzano/verrazzano-crd-generator v0.3.35-0.20201211145006-a6882074bd8d
+	github.com/verrazzano/verrazzano-crd-generator v0.3.35-0.20201214161122-0330d094db41
 	go.uber.org/zap v1.16.0
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
