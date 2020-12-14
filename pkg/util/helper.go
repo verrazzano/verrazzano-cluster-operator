@@ -4,10 +4,12 @@
 package util
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -120,8 +122,25 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 	}
 
 	// Set host
-	if host != "" {
-		req.Host = host
+	urlObj, err := url.Parse(reqURL)
+	if err != nil {
+		zap.S().Fatalf("Invalid URL '%s': %v", reqURL, err)
+		return nil, "", err
+	}
+	parsedHost := urlObj.Host
+	if host != "" && host != parsedHost {
+		dialer := &net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}
+		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			zap.S().Debugf("address original: %s \n", addr)
+			if addr == parsedHost+":443" {
+				addr = host + ":443"
+				zap.S().Debugf("address modified: %s \n", addr)
+			}
+			return dialer.DialContext(ctx, network, addr)
+		}
 	}
 
 	// Set basic auth
