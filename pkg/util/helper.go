@@ -129,6 +129,8 @@ func SendRequest(action, reqURL, host string, headers map[string]string, paramet
 	}
 	parsedHost := urlObj.Host
 	if host != "" && host != parsedHost {
+		// When the in-cluster accessible host is different from the outside accessible URL's host (parsedHost),
+		// do a 'curl --resolve' equivalent
 		dialer := &net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
