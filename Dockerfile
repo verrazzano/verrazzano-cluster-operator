@@ -3,7 +3,7 @@
 
 FROM container-registry.oracle.com/os/oraclelinux:7-slim@sha256:fcc6f54bb01fc83319990bf5fa1b79f1dec93cbb87db3c5a8884a5a44148e7bb AS build_base
 
-RUN yum update -y \
+RUN yum update -y python \
     && yum-config-manager --save --setopt=ol7_ociyum_config.skip_if_unavailable=true \
     && yum install -y oracle-golang-release-el7 \
     && yum-config-manager --add-repo http://yum.oracle.com/repo/OracleLinux/OL7/developer/golang113/x86_64 \
@@ -37,7 +37,7 @@ RUN GO111MODULE=on go build \
 
 FROM container-registry.oracle.com/os/oraclelinux:7-slim@sha256:fcc6f54bb01fc83319990bf5fa1b79f1dec93cbb87db3c5a8884a5a44148e7bb
 
-RUN yum install -y ca-certificates curl openssl && yum clean all && rm -rf /var/cache/yum
+RUN yum update -y python && yum install -y ca-certificates curl openssl && yum clean all && rm -rf /var/cache/yum
 
 COPY --from=build_base /usr/bin/verrazzano-cluster-operator /usr/local/bin/verrazzano-cluster-operator
 
