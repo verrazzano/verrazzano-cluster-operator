@@ -7,7 +7,7 @@ RUN yum update -y python \
     && yum-config-manager --save --setopt=ol7_ociyum_config.skip_if_unavailable=true \
     && yum install -y oracle-golang-release-el7 \
     && yum-config-manager --add-repo http://yum.oracle.com/repo/OracleLinux/OL7/developer/golang113/x86_64 \
-    && yum install -y git gcc make golang-1.13.3-1.el7 \
+    && yum install -y git gcc make golang-1.13.3-1.el7 glibc \
     && yum clean all \
     && go version
 
