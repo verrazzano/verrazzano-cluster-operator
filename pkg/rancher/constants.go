@@ -10,7 +10,8 @@ type Config struct {
 	URL                      string
 	Username                 string
 	Password                 string
-	Host                     string
+	NodeIP                   string
+	NodePort                 int32
 	CertificateAuthorityData []byte
 }
 

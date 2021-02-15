@@ -198,15 +198,16 @@ func SendRequest(action string, rancherConfig Config, apiPath string, headers, p
 		req.Header.Add(k, headers[k])
 	}
 
-	// Set host
+	// Set resolve
 	urlObj, err := url.Parse(reqURL)
 	if err != nil {
 		zap.S().Fatalf("Invalid URL '%s': %v", reqURL, err)
 		return nil, "", err
 	}
 	parsedHost := urlObj.Host
-	host := rancherConfig.Host
-	if host != "" && host != parsedHost {
+	nodeIP := rancherConfig.NodeIP
+	nodePort := rancherConfig.NodePort
+	if nodeIP != "" && nodePort != 0 && nodeIP != parsedHost {
 		// When the in-cluster accessible host is different from the outside accessible URL's host (parsedHost),
 		// do a 'curl --resolve' equivalent
 		dialer := &net.Dialer{
@@ -216,7 +217,7 @@ func SendRequest(action string, rancherConfig Config, apiPath string, headers, p
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			zap.S().Debugf("address original: %s \n", addr)
 			if addr == parsedHost+":443" {
-				addr = host + ":443"
+				addr = fmt.Sprintf("%s:%d", nodeIP, nodePort)
 				zap.S().Debugf("address modified: %s \n", addr)
 			}
 			return dialer.DialContext(ctx, network, addr)

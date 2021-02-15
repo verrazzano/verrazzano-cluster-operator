@@ -110,12 +110,14 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string) (
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientSet.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
-	// TODO get from secret and nginx controller
+	username, password := managedclusters.GetRancherCredentials(kubeClientSet)
+	nodeIP, nodePort := managedclusters.GetNginxIngressControllerNodeIPAndPort(kubeClientSet)
 	rancherConfig := rancher.Config{
-		URL:                      "",
-		Username:                 "",
-		Password:                 "",
-		Host:                     "",
+		URL:                      managedclusters.GetRancherIngress(kubeClientSet),
+		Username:                 username,
+		Password:                 password,
+		NodeIP:                   nodeIP,
+		NodePort:                 nodePort,
 		CertificateAuthorityData: managedclusters.GetRancherCACert(kubeClientSet),
 	}
 
