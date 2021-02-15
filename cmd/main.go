@@ -28,11 +28,8 @@ func main() {
 	flag.Parse()
 	// initialize logs with verbosity-level and configurations
 	logs.InitLogs(options)
-	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
-		zap.S().Fatalf("Rancher URL and/or credentials not specified!")
-	}
 	zap.S().Debugf("Creating new controller watching namespace %s.", watchNamespace)
-	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherUserName, rancherPassword)
+	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace)
 	if err != nil {
 		zap.S().Fatalf("Error creating the controller: %s", err.Error())
 	}
