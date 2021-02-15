@@ -58,7 +58,7 @@ type Controller struct {
 }
 
 // NewController returns a new Super Domain Operator controller
-func NewController(kubeconfig string, masterURL string, watchNamespace string) (*Controller, error) {
+func NewController(kubeconfig string, masterURL string, watchNamespace string, rancherURL string, rancherHost string, rancherPort string, rancherUsername string, rancherPassword string) (*Controller, error) {
 	//
 	// Instantiate connection and clients to local k8s cluster
 	//
@@ -110,14 +110,12 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string) (
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientSet.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
-	username, password := managedclusters.GetRancherCredentials(kubeClientSet)
-	nodeIP, nodePort := managedclusters.GetNginxIngressControllerNodeIPAndPort(kubeClientSet)
 	rancherConfig := rancher.Config{
-		URL:                      managedclusters.GetRancherIngress(kubeClientSet),
-		Username:                 username,
-		Password:                 password,
-		NodeIP:                   nodeIP,
-		NodePort:                 nodePort,
+		URL:                      rancherURL,
+		Username:                 rancherUsername,
+		Password:                 rancherPassword,
+		NodeIP:                   rancherHost,
+		NodePort:                 rancherPort,
 		CertificateAuthorityData: managedclusters.GetRancherCACert(kubeClientSet),
 	}
 

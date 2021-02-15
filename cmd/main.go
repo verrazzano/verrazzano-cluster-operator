@@ -19,6 +19,7 @@ var (
 	watchNamespace  string
 	rancherURL      string
 	rancherHost     string
+	rancherPort     string
 	rancherUserName string
 	rancherPassword string
 	options         = kzap.Options{}
@@ -28,8 +29,11 @@ func main() {
 	flag.Parse()
 	// initialize logs with verbosity-level and configurations
 	logs.InitLogs(options)
+	if rancherURL == "" || rancherUserName == "" || rancherPassword == "" {
+		zap.S().Fatalf("Rancher URL and/or credentials not specified!")
+	}
 	zap.S().Debugf("Creating new controller watching namespace %s.", watchNamespace)
-	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace)
+	newController, err := controller.NewController(kubeconfig, masterURL, watchNamespace, rancherURL, rancherHost, rancherPort, rancherUserName, rancherPassword)
 	if err != nil {
 		zap.S().Fatalf("Error creating the controller: %s", err.Error())
 	}
@@ -43,7 +47,8 @@ func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&watchNamespace, "watchNamespace", "", "Optionally, a namespace to watch exclusively.  If not set, all namespaces will be watched.")
 	flag.StringVar(&rancherURL, "rancherURL", "", "Rancher URL.")
-	flag.StringVar(&rancherHost, "rancherHost", "", "Optional host name to use in host headers when accessing Rancher.")
+	flag.StringVar(&rancherHost, "rancherHost", "", "Optional host name to access Rancher.")
+	flag.StringVar(&rancherPort, "rancherPort", "", "Optional host port to access Rancher.")
 	flag.StringVar(&rancherUserName, "rancherUserName", "", "Rancher username.")
 	flag.StringVar(&rancherPassword, "rancherPassword", "", "Rancher password.")
 	options.BindFlags(flag.CommandLine)

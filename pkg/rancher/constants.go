@@ -11,7 +11,7 @@ type Config struct {
 	Username                 string
 	Password                 string
 	NodeIP                   string
-	NodePort                 int32
+	NodePort                 string
 	CertificateAuthorityData []byte
 }
 
