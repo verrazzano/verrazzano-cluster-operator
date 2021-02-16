@@ -6,7 +6,6 @@ package controller
 import (
 	"bytes"
 	"errors"
-	"net/url"
 	"time"
 
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
@@ -59,7 +58,7 @@ type Controller struct {
 }
 
 // NewController returns a new Super Domain Operator controller
-func NewController(kubeconfig string, masterURL string, watchNamespace string, rancherURL string, rancherHost string, rancherUsername string, rancherPassword string) (*Controller, error) {
+func NewController(kubeconfig string, masterURL string, watchNamespace string, rancherURL string, rancherHost string, rancherPort string, rancherUsername string, rancherPassword string) (*Controller, error) {
 	//
 	// Instantiate connection and clients to local k8s cluster
 	//
@@ -111,20 +110,12 @@ func NewController(kubeconfig string, masterURL string, watchNamespace string, r
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClientSet.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 
-	// If the Rancher host name is explicitly passed in, we'll use that, otherwise we'll just use the host name from the
-	// URL.  Having the rancherHost parameter allows rancher-operator to work in a Verrazzano environment without external DNS.
-	if rancherHost == "" {
-		rancherURLObj, err := url.Parse(rancherURL)
-		if err != nil {
-			zap.S().Fatalf("Invalid Rancher URL '%s': %v", rancherURL, err)
-		}
-		rancherHost = rancherURLObj.Host
-	}
 	rancherConfig := rancher.Config{
 		URL:                      rancherURL,
 		Username:                 rancherUsername,
 		Password:                 rancherPassword,
-		Host:                     rancherHost,
+		NodeIP:                   rancherHost,
+		NodePort:                 rancherPort,
 		CertificateAuthorityData: managedclusters.GetRancherCACert(kubeClientSet),
 	}
 

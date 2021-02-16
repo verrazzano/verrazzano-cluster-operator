@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 )
@@ -90,12 +91,78 @@ func newSecret(secretName string, cluster rancher.Cluster) *corev1.Secret {
 func GetRancherCACert(kubeClientSet kubernetes.Interface) []byte {
 	certSecret, err := kubeClientSet.CoreV1().Secrets(rancher.RancherNamespace).Get(context.TODO(), rancher.TLSRancherIngressSecret, metav1.GetOptions{})
 	if err != nil {
-		zap.S().Warnf("Error getting secret %s/%s in management cluster: %s", rancher.RancherNamespace, rancher.TLSRancherIngressSecret, err.Error())
+		zap.S().Warnf("Error getting secret %s/%s in admin cluster: %s", rancher.RancherNamespace, rancher.TLSRancherIngressSecret, err.Error())
 		return []byte{}
 	}
 	if certSecret == nil {
-		zap.S().Warnf("Secret %s/%s not found in management cluster", rancher.RancherNamespace, rancher.TLSRancherIngressSecret)
+		zap.S().Warnf("Secret %s/%s not found in admin cluster", rancher.RancherNamespace, rancher.TLSRancherIngressSecret)
 		return []byte{}
 	}
 	return certSecret.Data["ca.crt"]
+}
+
+// GetRancherCredentials returns username/password from secret "verrazzano" in namespace "verrazzano-system"
+func GetRancherCredentials(kubeClientSet kubernetes.Interface) (string, string) {
+	const verrazzanoNamespace = "verrazzano-system"
+	const credentailsSecret = "verrazzano"
+	credsSecret, err := kubeClientSet.CoreV1().Secrets(verrazzanoNamespace).Get(context.TODO(), credentailsSecret, metav1.GetOptions{})
+	if err != nil {
+		zap.S().Warnf("Error getting secret %s/%s in admin cluster: %s", verrazzanoNamespace, credentailsSecret, err.Error())
+		return "", ""
+	}
+	if credsSecret == nil {
+		zap.S().Warnf("Secret %s/%s not found in admin cluster", verrazzanoNamespace, credentailsSecret)
+		return "", ""
+	}
+	zap.S().Infof("The username used to connect to rancher in admin cluster is %s", credsSecret.StringData["username"])
+	return credsSecret.StringData["username"], credsSecret.StringData["password"]
+}
+
+// GetNginxIngressControllerNodeIPAndPort returns the nginx controller node ip and port
+func GetNginxIngressControllerNodeIPAndPort(kubeClientSet kubernetes.Interface) (string, int32) {
+	const NginxNamespace = "ingress-nginx"
+	nodePort := int32(0)
+	service, err := kubeClientSet.CoreV1().Services(NginxNamespace).Get(context.TODO(), "ingress-controller-ingress-nginx-controller", metav1.GetOptions{})
+	if err != nil {
+		zap.S().Warnf("Error getting servcice for ingress-nginx-controller in admin cluster: %s", err.Error())
+		return "", nodePort
+	}
+	for _, servicePort := range service.Spec.Ports {
+		if servicePort.Name == "https" {
+			nodePort = servicePort.NodePort
+		}
+	}
+	set := labels.Set(service.Spec.Selector)
+	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
+	pods, err := kubeClientSet.CoreV1().Pods(NginxNamespace).List(context.TODO(), listOptions)
+	if err != nil {
+		zap.S().Warnf("Error getting pod for ingress-nginx-controller in admin cluster: %s", err.Error())
+		return "", nodePort
+	}
+	for _, pod := range pods.Items {
+		zap.S().Infof("The host ip for ingress-nginx-controller pod in admin cluster is %s", pod.Status.HostIP)
+		return pod.Status.HostIP, nodePort
+	}
+	return "", nodePort
+}
+
+// GetRancherIngress returns rancher ingress
+func GetRancherIngress(kubeClientSet kubernetes.Interface) string {
+	const rancherNamespace = "cattle-system"
+	const rancherIngressName = "rancher"
+	ingress, err := kubeClientSet.ExtensionsV1beta1().Ingresses(rancherNamespace).Get(context.TODO(), rancherIngressName, metav1.GetOptions{})
+	if err != nil {
+		zap.S().Warnf("Error getting ingress %s/%s in admin cluster: %s", rancherNamespace, rancherIngressName, err.Error())
+		return ""
+	}
+	if ingress == nil {
+		zap.S().Warnf("Ingress %s/%s not found in admin cluster", rancherNamespace, rancherIngressName)
+		return ""
+	}
+	for _, rule := range ingress.Spec.Rules {
+		url := "https://" + rule.Host
+		zap.S().Infof("The URL used to connect to rancher in admin cluster is %s", url)
+		return url
+	}
+	return ""
 }
