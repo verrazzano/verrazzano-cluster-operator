@@ -134,7 +134,7 @@ func Retry(backoff wait.Backoff, fn wait.ConditionFunc) error {
 	return err
 }
 
-// Retrieve poxy url from environment
+// Retrieve proxy url from environment
 func getProxyURL() string {
 	if proxyURL := os.Getenv("https_proxy"); proxyURL != "" {
 		return proxyURL
