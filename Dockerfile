@@ -3,7 +3,7 @@
 
 FROM container-registry.oracle.com/os/oraclelinux:7-slim@sha256:fcc6f54bb01fc83319990bf5fa1b79f1dec93cbb87db3c5a8884a5a44148e7bb AS build_base
 
-RUN yum update -y python \
+RUN yum update -y python nss nss-tools nss-sysinit openldap \
     && yum-config-manager --save --setopt=ol7_ociyum_config.skip_if_unavailable=true \
     && yum install -y oracle-golang-release-el7 \
     && yum-config-manager --add-repo http://yum.oracle.com/repo/OracleLinux/OL7/developer/golang113/x86_64 \
