@@ -37,7 +37,7 @@ RUN GO111MODULE=on go build \
 
 FROM container-registry.oracle.com/os/oraclelinux:7-slim@sha256:fcc6f54bb01fc83319990bf5fa1b79f1dec93cbb87db3c5a8884a5a44148e7bb
 
-RUN yum update -y python && yum install -y ca-certificates curl openssl glibc && yum clean all && rm -rf /var/cache/yum
+RUN yum update -y python nss nss-tools nss-sysinit openldap && yum install -y ca-certificates curl openssl glibc && yum clean all && rm -rf /var/cache/yum
 
 COPY --from=build_base /usr/bin/verrazzano-cluster-operator /usr/local/bin/verrazzano-cluster-operator
 
