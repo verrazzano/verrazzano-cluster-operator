@@ -11,7 +11,7 @@ import (
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util"
-	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util/diff"
+	"github.com/verrazzano/pkg/diff"
 	"github.com/verrazzano/verrazzano-crd-generator/pkg/apis/verrazzano/v1beta1"
 	sdoClientSet "github.com/verrazzano/verrazzano-crd-generator/pkg/client/clientset/versioned"
 	listers "github.com/verrazzano/verrazzano-crd-generator/pkg/client/listers/verrazzano/v1beta1"
@@ -29,7 +29,7 @@ func CreateVerrazzanoManagedCluster(sdoClientSet sdoClientSet.Interface, tmcList
 
 	existingTmc, err := tmcLister.VerrazzanoManagedClusters(constants.DefaultNamespace).Get(newTmc.Name)
 	if existingTmc != nil {
-		specDiffs := diff.CompareIgnoreTargetEmpties(existingTmc, newTmc)
+		specDiffs := diff.Diff(existingTmc, newTmc)
 		if specDiffs != "" {
 			zap.S().Infof("Updating VerrazzanoManagedCluster CR '%s'", newTmc.Name)
 			zap.S().Debugf("Spec differences:\n%s", specDiffs)
