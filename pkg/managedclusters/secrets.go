@@ -8,10 +8,10 @@ package managedclusters
 import (
 	"context"
 
+	"github.com/verrazzano/pkg/diff"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/constants"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/rancher"
 	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util"
-	"github.com/verrazzano/verrazzano-cluster-operator/pkg/util/diff"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,7 +29,7 @@ func CreateSecret(kubeClientSet kubernetes.Interface, secretLister corev1listers
 
 	existingSecret, err := secretLister.Secrets(constants.DefaultNamespace).Get(secretName)
 	if existingSecret != nil {
-		specDiffs := diff.CompareIgnoreTargetEmpties(existingSecret, newSecret)
+		specDiffs := diff.Diff(existingSecret, newSecret)
 		if specDiffs != "" {
 			zap.S().Infof("Updating VerrazzanoManagedCluster Secret '%s' for cluster '%s'", secretName, cluster.Name)
 			zap.S().Debugf("Spec differences:\n%s", specDiffs)
